@@ -10,6 +10,10 @@
  var router = express.Router();
 
  var formUpload = multer({ dest: './temp' });
+ const bodyParser = require('body-parser');
+
+ app.use(bodyParser.json());
+ app.use(bodyParser.urlencoded({ extended: true }));
 
 
  router.get('/', (res, req, next) => {

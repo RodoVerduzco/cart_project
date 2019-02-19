@@ -1,0 +1,215 @@
+/**
+ *  Product Handler
+ *
+ */
+
+/* jshint esversion: 6 */
+var multer = require('multer');    // To save Files
+var express = require('express');
+var router = express.Router();
+
+var MongoConnector = require('../MongoConnector.js');
+var ProductModel = require('./ProductModel.js');
+
+var formUpload = multer({ dest: './temp' });
+var app = express();
+
+router.get('/', (req, res, next) => {
+  res.send('Called Products');
+});
+
+//  INSERT USER
+router.post('/insertProduct', (req, res, next) => {
+
+  // To know which call was made
+  console.log("# POST: Insert Products");
+
+  var connector = new MongoConnector((err) => {
+    ProductModel.insertProduct(connector, req.body, (err, mongoRes) => {
+        console.log(mongoRes.result);
+        connector.close();
+
+        res.setHeader('Content-Type', 'application/json');
+        res.status(201).send(JSON.stringify({response: "PRODUCT_INSERTED"}));
+    });
+  });
+});
+
+
+/**
+ *   Get all users from the database
+ */
+router.get('/getProducts', (req, res, next) => {
+  // To know which call was made
+  console.log("# GET: Getting All Products");
+
+  var connector = new MongoConnector((err) => {
+    var users_ = ProductModel.getAllProducts(connector, (docs) => {
+      connector.close();
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).send(JSON.stringify({response: docs}));
+    });
+  });
+});
+
+/**
+ *  Get a specific Product form the database
+ */
+router.post('/getProduct', (req, res, next) => {
+  // To know which call was made
+  console.log("# POST: Getting Specific Product");
+
+  var connector = new MongoConnector((err) => {
+    var name = req.body.name;
+    console.log(req.body.name);
+
+    if(name) {
+      ProductModel.getProduct(connector, name, (docs) => {
+          connector.close();
+
+          // Element not found
+          if(docs === "NOT_FOUND") {
+            res.setHeader('Content-Type', 'application/json');
+            res.status(404).send(JSON.stringify({response: "NOT_FOUND"}));
+          }
+          else {
+            res.setHeader('Content-Type', 'application/json');
+            res.status(200).send(JSON.stringify({response: docs}));
+          }
+      });
+    }
+    else {
+      res.setHeader('Content-Type', 'application/json');
+      res.status(422).send(JSON.stringify({response: "Missing the name Parameter"}));
+    }
+  });
+});
+
+// EDIT PRODUCT INFORMATION
+router.put('/editProduct', (req, res, next) => {
+  // To know which call was made
+  console.log("# PUT: Edit Product Information");
+
+  var name = req.body.name;
+
+  // If values needed are received
+  if(name) {
+    var connector = new MongoConnector((err) => {
+
+      ProductModel.editProduct(connector, name, req.body, (docs) => {
+        console.log(docs);
+        connector.close();
+
+        res.setHeader('Content-Type', 'application/json');
+        res.status(201).send(JSON.stringify({response: docs}));
+      });
+    });
+  }
+  else {
+    res.setHeader('Content-Type', 'application/json');
+    res.status(422).send(JSON.stringify({response: "Missing the email Parameter"}));
+  }
+});
+
+// DEACTIVATE USER
+router.put('/deactivateProduct', (req, res, next) => {
+  // To know which call was made
+  console.log("# PUT: Deactivate Product");
+  console.log(req.body);
+  var name = req.body.name;
+
+  // If values needed are received
+  if(name) {
+    var connector = new MongoConnector((err) => {
+
+      ProductModel.editProduct(connector, name, {"status": "inactive"}, (result) => {
+          console.log(result);
+          connector.close();
+
+          res.setHeader('Content-Type', 'application/json');
+          res.status(200).send(JSON.stringify({response: "Product Deactivated"}));
+      });
+    });
+  }
+  else {
+    res.setHeader('Content-Type', 'application/json');
+    res.status(422).send(JSON.stringify({response: "Missing the name Parameter"}));
+  }
+});
+
+// ACTIVATE
+router.put('/activateProduct', (req, res, next) => {
+  // To know which call was made
+  console.log("# PUT: Activate Product");
+
+  var name = req.body.name;
+
+  // If values needed are received
+  if(name) {
+    var connector = new MongoConnector((err) => {
+
+      ProductModel.editProduct(connector, name, {"status": "active"}, (result) => {
+          console.log(result);
+          connector.close();
+
+          res.setHeader('Content-Type', 'application/json');
+          res.status(200).send(JSON.stringify({response: "Product Activated"}));
+      });
+    });
+  }
+  else {
+    res.setHeader('Content-Type', 'application/json');
+    res.status(422).send(JSON.stringify({response: "Missing the name Parameter"}));
+  }
+});
+
+
+// UPDATE INVENTORY
+router.post('/updateInverntory', (req, res, next) => {
+  // To know which call was made
+  console.log("# POST: Update Inventory Product");
+
+  var name = req.body.name;
+  var add_qty = parseInt(req.body.add_qty);
+
+  if(name && add_qty) {
+    // find the product
+    var connector = new MongoConnector((err) => {
+        ProductModel.getProduct(connector, name, (docs) => {
+            connector.close();
+
+            // Element not found
+            if(docs === "NOT_FOUND") {
+              res.setHeader('Content-Type', 'application/json');
+              res.status(404).send(JSON.stringify({response: "NOT_FOUND"}));
+            }
+            else {
+              // Update the Product
+              var connectorUpdate = new MongoConnector((err) => {
+                var old_qty = parseInt(docs.qty);
+
+                // Update the database
+                ProductModel.editProduct(connectorUpdate, name, {"qty": old_qty + add_qty}, (result) => {
+                  connectorUpdate.close();
+
+                  if(result === "NOT_FOUND") {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.status(418).send(JSON.stringify({response: "Incorrect Product or Password"}));
+                  }
+                  else {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.status(200).send(JSON.stringify({response: result}));
+                  }
+                });
+              });
+            }
+        });
+    });
+  }
+  else {
+    res.setHeader('Content-Type', 'application/json');
+    res.status(422).send(JSON.stringify({response: "Missing the name or the qty of the product"}));
+  }
+});
+
+module.exports = router;

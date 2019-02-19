@@ -38,17 +38,6 @@ class UserModel {
   /**
    *  Updates the user information
    *  @param {object} connector - mongodb connection
-   *  @param id - user to modify
-   *  @param userModel - data to write
-   *  @param callback - function to call
-   */
-  static updateUser(connector, id, userModel, callback) {
-
-  }
-
-  /**
-   *  Updates the user information
-   *  @param {object} connector - mongodb connection
    *  @param id - user to retrieve the data for
    *  @param callback - function to call each time a record is found
    */

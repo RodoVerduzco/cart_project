@@ -1,19 +1,22 @@
 /* jshint esversion: 6 */
 
-var express = require('express');
-var cookieParser = require('cookie-parser');
-var users = require('./users/usersHandler.js');
+var express = require('express');                    // Express server framework
+var cookieParser = require('cookie-parser');           // For cookies management
+var cors = require('cors');                                     // To allow CORS
+var multer = require('multer');                        // writes a file received
+var fs = require('fs');                                           // File system
+const bodyParser = require('body-parser');               // To parse the request
+
+// User Defined
+var users = require('./users/usersHandler.js');             // Users Hanlding JS
+var products = require('./products/productsHandler.js');  // Products handler JS
 
 var app = express();
-
-var multer = require('multer');                     // writes a file received
 var uploadFolder = multer({dest: 'uploads/'});   // define destination folder
-
-var fs = require('fs');                                        // File system
-const bodyParser = require('body-parser');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors());
 
 app.get('/', (req, res, next) => {
   console.log("get 1");
@@ -22,6 +25,7 @@ app.get('/', (req, res, next) => {
 
 // call to users
 app.use('/users', users);
+app.use('/products', products);
 
 app.use(cookieParser());
 app.use(express.static('./public_html'));

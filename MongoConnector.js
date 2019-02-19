@@ -80,7 +80,6 @@ class MongoConnector {
     *  Update a single element collection
     */
     updateDoc(col, myQuery, update_cond, callback) {
-
       this.client.db(dbName).collection(col).updateOne(myQuery, update_cond,
        (err, result) => {
          if (err) throw err;
