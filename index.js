@@ -2,7 +2,7 @@
 
 var express = require('express');
 var cookieParser = require('cookie-parser');
-var users = require('./users/users.js');
+var users = require('./users/usersHandler.js');
 
 var app = express();
 
@@ -10,12 +10,18 @@ var multer = require('multer');                     // writes a file received
 var uploadFolder = multer({dest: 'uploads/'});   // define destination folder
 
 var fs = require('fs');                                        // File system
+const bodyParser = require('body-parser');
 
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// app.get('/', (req, res, next) => {
-//   console.log("get 1");
-//   next();
-// });
+app.get('/', (req, res, next) => {
+  console.log("get 1");
+  next();
+});
+
+// call to users
+app.use('/users', users);
 
 app.use(cookieParser());
 app.use(express.static('./public_html'));
@@ -32,8 +38,6 @@ app.get('/setCookie', (req, res) => {
   res.end("cookie set");
 });
 
-// call to users
-app.use('/users', users);
 
 // call to ping
 app.get('/ping', (req, res) => {
@@ -47,6 +51,7 @@ app.post('/uploadFile', uploadFolder.single('File1'), (req, res, next) => {
     console.log(req.file);
     res.end('done');
 });
+
 
 // Main
 app.get('/', (req, res) => {

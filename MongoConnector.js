@@ -3,7 +3,7 @@
 
 const MongoClient = require('mongodb').MongoClient;
 
-var dbName = "shopDatabase";
+var dbName = "shoppingCart";
 
 class MongoConnector {
 
@@ -51,12 +51,42 @@ class MongoConnector {
    *  Receive the specific elements from the collection
    */
   getDocsFromCollection(col, where, callback) {
-    this.client.db(dbName).collection(col).find(where).forEach(
-      (err, doc) => {
+
+    var data = this.client.db(dbName).collection(col).findOne(where, (err, doc) =>{
+
+      // Found
+      if(doc) {
         callback(doc);
       }
-    );
+      else {
+        callback("NOT_FOUND");
+      }
+    });
   }
+
+  /**
+   *  Get all users from the collection
+   */
+   getAllDocs(col, callback) {
+
+     this.client.db(dbName).collection(col).find({}).toArray(
+      (err, result) => {
+        if (err) throw err;
+        callback(result);
+      });
+   }
+
+   /**
+    *  Update a single element collection
+    */
+    updateDoc(col, myQuery, update_cond, callback) {
+
+      this.client.db(dbName).collection(col).updateOne(myQuery, update_cond,
+       (err, result) => {
+         if (err) throw err;
+         callback("Updated");
+       });
+    }
 
   close() {
     this.client.close();

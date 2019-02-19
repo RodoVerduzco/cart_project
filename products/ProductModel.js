@@ -5,31 +5,30 @@
 
 /* jshint esversion: 6 */
 
-const COLLECTION = 'users';
+const COLLECTION = 'products';
 
-class UserModel {
+class ProductModel {
 
   constructor(data) {
     this.id = data._id;
-    this.username = data.username;
-    this.email = data.email;
+    this.product_name = data.product_name;
+    this.price = data.price;
+    this.inventory = data.inventory;
   }
 
   /**
    * inserts a new user
    *  @param {object} connector - mongodb connection
-   *  @param {JSON object} userModel - data to write
+   *  @param {JSON object} productModel - data to write
    *  @param {function} callback - function to call
    */
-  static insertUser(connector, userModel, callback) {
+  static insertProduct(connector, productModel, callback) {
 
     var data = {
-      "username": userModel.username,
-      "password": userModel.password,
-      "email": userModel.email,
-      "status": "active",
-      "type": "admin",
-      "cart": []
+      "product_name": productModel.product_name,
+      "price": productModel.price,
+      "inventory": productModel.inventory,
+      "status": "active"
     };
 
     connector.insertDocInCollection(COLLECTION, data, callback);
@@ -39,59 +38,51 @@ class UserModel {
    *  Updates the user information
    *  @param {object} connector - mongodb connection
    *  @param id - user to modify
-   *  @param userModel - data to write
+   *  @param productModel - data to write
    *  @param callback - function to call
    */
-  static updateUser(connector, id, userModel, callback) {
+  static updateProduct(connector, id, productModel, callback) {
 
   }
 
   /**
-   *  Updates the user information
+   *  Gets the product  information
    *  @param {object} connector - mongodb connection
-   *  @param id - user to retrieve the data for
+   *  @param product_name - product to retrieve the data for
    *  @param callback - function to call each time a record is found
    */
-  static getUser(connector, email, callback) {
+  static getProduct(connector, product_name, callback) {
     var condition = {
-      "email": email
+      "product_name": product_name
     };
 
     connector.getDocsFromCollection(COLLECTION, condition, callback);
   }
 
   /**
-   *  Updates the user information
+   *  Receives a list of products in the database from  specific condition
    *  @param {object} connector - mongodb connection
    *  @param {JSON} condition - find condition
    *  @param callback - function to call each time a record is found
    */
-  static getUsers(connector, condition, callback) {
+  static getProducts(connector, condition, callback) {
     connector.getDocsFromCollection(COLLECTION, condition, callback);
   }
 
   /**
-   *  Receives the information from all the userss
+   *  Receives the information from all the products
    */
-  static getAllUsers(connector, callback) {
+  static getAllProducts(connector, callback) {
     connector.getAllDocs(COLLECTION, callback);
   }
 
-  static editUser(connector, email, new_data, callback) {
-    var myQuery = {"email": email};
+  static editProduct(connector, product_name, new_data, callback) {
+    var myQuery = {"product_name": product_name};
     var update_cond = { $set: new_data};
 
     connector.updateDoc(COLLECTION, myQuery, update_cond, callback);
   }
 
-  static loginUser(connector, email, password, callback) {
-    var myQuery = { $and: [
-      {"email": email},
-      {"password": password}
-    ]};
-
-    connector.getDocsFromCollection(COLLECTION, myQuery, callback);
-  }
 }
 
-module.exports = UserModel;
+module.exports = ProductModel;

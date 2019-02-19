@@ -33,4 +33,16 @@
              }
 );
 
+router.post('/deactivate',
+            formUpload.fields([
+              { name:'username', maxCount:1 },
+              { name:'password', maxCount:1 },
+              { name:'email', maxCount:1 }
+            ]),
+            (req, res) => {
+              console.log(req.body);
+              res.end('done creating user');
+            }
+);
+
 module.exports = router;
