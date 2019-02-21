@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title> Index </title>
+</head>
+
+<body>
+  <p>Index on HTML</p>
+  <div id="main"></div>
+  <br>
+
+  <!-- File Form -->
+  <form name="UploadForm" action="/uploadFile" enctype="multipart/form-data" method="post">
+    <input id="file" name="myFile" type="file"/>
+    <button type="button" onclick="doUpload();"> Enviar archivo </button>
+  </form>
+
+  <!-- Create User Form -->
+  <form name="NewUser" action="/users/create" enctype="multipart/form-data" method="post">
+    <input id="username" name="username" type="text"/>
+    <input id="password" name="password" type="password"/>
+    <input id="email" name="email" type="text"/>
+    <button type="button" onclick="doInsertUser();"> Crear Usuario </button>
+  </form>
+
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+          integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+          crossorigin="anonymous"></script>
+  <script type="text/javascript">
+    function onStart() {
+      alert("loaded");
+      $.ajax('/ping').done( (data) => {
+        $("#main").text(data);
+      });
+    }
+
+    function doUpload() {
+      var data = new FormData();
+
+      // Get the file
+      data.append("File1", $("#file")[0].files[0]);
+
+      // Send file via AJAX
+      $.ajax({
+        url: "/uploadFile",
+        data: data,
+        contentType: false,
+        processData: false,
+        method: 'POST',
+        type: 'ṔOST', // For jQuery < 1.9
+        success: function (data) {
+          alert("Did Arrive " + data);
+        }
+      });
+    }
+
+    function doInsertUser() {
+      var data = new FormData();
+
+      // Get the data from the form
+      data.append("username", $("#username")[0].value);
+      data.append("password", $("#password")[0].value);
+      data.append("email", $("#email")[0].value);
+
+      // Send user via AJAX
+      $.ajax({
+        url: "/users/create",
+        data: data,
+        contentType: false,
+        processData: false,
+        method: 'POST',
+        type: 'ṔOST', // For jQuery < 1.9
+        success: function (data) {
+          alert("Did Arrive " + data);
+        }
+      });
+    }
+
+    $(document).ready(onStart);
+  </script>
+</body>
+
+</html>

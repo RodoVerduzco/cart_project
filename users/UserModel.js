@@ -73,6 +73,13 @@ class UserModel {
     connector.updateDoc(COLLECTION, myQuery, update_cond, callback);
   }
 
+  static changeUserStatus(connector, email, callback) {
+    var myQuery = {"email": email};
+    var update_cond = {$bit: {status: {xor: 1}}};  //Xor to change true or false
+
+    connector.updateDoc(COLLECTION, myQuery, update_cond, callback);
+  }
+
   static loginUser(connector, email, password, callback) {
     var myQuery = { $and: [
       {"email": email},

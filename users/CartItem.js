@@ -39,14 +39,30 @@ class CartItem {
 
     connector.updateDoc(COLLECTION, myQuery, item_to_cart, callback);
   }
-                                                                                  /**************  TODO ************/
-  static item_exist(connector, email, product_name, callback) {
-    var myQuery = { $and: [
-      {"email": email},
-      {"product_name": product_name}
-    ]};
 
-    connector.updateDoc(COLLECTION, myQuery, callback);
+  /**
+   *
+   *  @param {object} connector - mongodb connection
+   *  @param - data to write
+   *  @param callback - function to call
+   */
+  static updateCart(connector, email, new_data, callback) {
+    var myQuery = {
+      "email": email
+    };
+
+    var newCartQuery = { $set: {'cart': new_data}};
+
+    connector.updateDoc(COLLECTION, myQuery, newCartQuery, callback);
+  }
+
+  static get_cart_item(connector, email, product, callback) {
+    var myQuery = {$and: [
+      {"email": email},
+      {"cart": { "product_name": product}}
+    ]};
+    console.log(myQuery);
+    connector.getDocsFromCollection(COLLECTION, myQuery, callback);
   }
 
   /**

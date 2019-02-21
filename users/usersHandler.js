@@ -11,6 +11,7 @@ var router = express.Router();
 var MongoConnector = require('../MongoConnector.js');
 var UserModel = require('./UserModel.js');
 var CartItem = require('./CartItem.js');
+var ProductModel = require('../products/ProductModel.js');
 
 var formUpload = multer({ dest: './temp' });
 var app = express();
@@ -111,8 +112,8 @@ router.put('/editProfile', (req, res, next) => {
   }
 });
 
-// DEACTIVATE USER
-router.put('/deactivateUser', (req, res, next) => {
+// ACTIVATES OR DEACTIVATES USER STATUS
+router.put('/changeUserStatus', (req, res, next) => {
   // To know which call was made
   console.log("# PUT: Deactivate User");
 
@@ -122,12 +123,12 @@ router.put('/deactivateUser', (req, res, next) => {
   if(email) {
     var connector = new MongoConnector((err) => {
 
-      UserModel.editUser(connector, email, {"status": "inactive"}, (result) => {
+      UserModel.changeUserStatus(connector, email, (result) => {
           console.log(result);
           connector.close();
 
           res.setHeader('Content-Type', 'application/json');
-          res.status(200).send(JSON.stringify({response: "User Deactivated"}));
+          res.status(200).send(JSON.stringify({response: "User Status Changed"}));
       });
     });
   }
@@ -136,33 +137,6 @@ router.put('/deactivateUser', (req, res, next) => {
     res.status(422).send(JSON.stringify({response: "Missing the email Parameter"}));
   }
 });
-
-// ACTIVATE
-router.put('/activateUser', (req, res, next) => {
-  // To know which call was made
-  console.log("# PUT: Activate User");
-
-  var email = req.body.email;
-
-  // If values needed are received
-  if(email) {
-    var connector = new MongoConnector((err) => {
-
-      UserModel.editUser(connector, email, {"status": "active"}, (result) => {
-          console.log(result);
-          connector.close();
-
-          res.setHeader('Content-Type', 'application/json');
-          res.status(200).send(JSON.stringify({response: "User Activated"}));
-      });
-    });
-  }
-  else {
-    res.setHeader('Content-Type', 'application/json');
-    res.status(422).send(JSON.stringify({response: "Missing the email Parameter"}));
-  }
-});
-
 
 // LOG IN
 router.post('/login', (req, res, next) => {
@@ -189,7 +163,8 @@ router.post('/login', (req, res, next) => {
             res.setHeader('Content-Type', 'application/json');
             res.status(200).send(JSON.stringify({response: {
                                                     "status": "correct",
-                                                    "type": result.type}}));
+                                                    "type": result.type,
+                                                    "email": email}}));
             console.log("  > CORRECT");
           }
       });
@@ -202,7 +177,6 @@ router.post('/login', (req, res, next) => {
   }
 });
 
-
 // ADD TO CART
 router.post('/addCart', (req, res, next) => {
   // To know which call was made0
@@ -210,25 +184,69 @@ router.post('/addCart', (req, res, next) => {
 
   var email = req.body.email;
   var product = req.body.product;
-  var qty = req.body.qty;
-  var price = req.body.price;
+  var alredy_in_cart = false;          // Check if the element is alredy in the cart
 
-  if(email && product && qty && price) {
-                                                                                              /******** TODO *********/
-    // var checkConnecton = new MongoConnector((err) => {
-    //   CartItem.item_exist(connector, product, (err, mongoRes) => {
-    //
-    //   });
-    // });
+  // Search for the product information
+  if(email && product) {
 
-    var connector = new MongoConnector((err) => {
-      CartItem.add_to_cart(connector, req.body, (err, mongoRes) => {
-        console.log(mongoRes);
-        connector.close();
+    var connectorAlredyInCart = new MongoConnector((err) => {
+      CartItem.getCart(connectorAlredyInCart, email, (cart_docs) => {
+        connectorAlredyInCart.close();
 
-        res.setHeader('Content-Type', 'application/json');
-        res.status(201).send(JSON.stringify({response: "ADDED_TO_CART"}));
-      });
+
+          for(var i=0; i<cart_docs.cart.length; i++) {
+            // Search for same name of the product
+            if(cart_docs.cart[i].product_name === product) {
+              cart_docs.cart[i].qty = cart_docs.cart[i].qty + 1 ;
+              console.log("added");
+              alredy_in_cart = true;
+              break;
+            }
+          }
+
+          if(alredy_in_cart) {
+            var connectorUpdateCart = new MongoConnector((err) => {
+              CartItem.updateCart(connectorUpdateCart, email, cart_docs.cart, (cart_docs) => {
+                connectorUpdateCart.close();
+
+                res.setHeader('Content-Type', 'application/json');
+                res.status(404).send(JSON.stringify({response: "ADDED_TO_CART"}));
+              });
+            });
+          }
+          else {
+            var connectorProduct = new MongoConnector((err) => {
+                ProductModel.getProduct(connectorProduct, product, (docs) => {
+                    connectorProduct.close();
+
+                    // Element not found
+                    if(docs === "NOT_FOUND") {
+                      res.setHeader('Content-Type', 'application/json');
+                      res.status(404).send(JSON.stringify({response: "NOT_FOUND"}));
+                    }
+                    else {
+
+                      var item_to_add = {
+                        "price": docs.price,
+                        "product": product,
+                        "qty": 1,
+                        "email": email
+                      };
+
+                      var connector = new MongoConnector((err) => {
+                        CartItem.add_to_cart(connector, item_to_add, (mongoRes) => {
+                          console.log(mongoRes);
+                          connector.close();
+
+                          res.setHeader('Content-Type', 'application/json');
+                          res.status(201).send(JSON.stringify({response: "ADDED_TO_CART"}));
+                        });
+                      });
+                    }
+                });
+            });
+          }
+        });
     });
   }
   else {
@@ -245,7 +263,7 @@ router.put('/resetCart', (req, res, next) => {
 
   if(email) {
     var connector = new MongoConnector((err) => {
-      CartItem.reset_cart(connector, email, (err, mongoRes) => {
+      CartItem.reset_cart(connector, email, (mongoRes) => {
         console.log(mongoRes);
         connector.close();
 

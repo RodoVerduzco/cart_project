@@ -48,7 +48,7 @@ class MongoConnector {
 
 
   /**
-   *  Receive the specific elements from the collection
+   *  Receive the elements from the collection
    */
   getDocsFromCollection(col, where, callback) {
 
@@ -61,6 +61,31 @@ class MongoConnector {
       else {
         callback("NOT_FOUND");
       }
+    });
+  }
+
+  /**
+   *  Receive the specific elements from the collection
+   */
+  getDocsFromCollectionProjection(col, where, projection, callback) {
+
+    var data = this.client.db(dbName).collection(col).find(where, (err, doc) =>{
+      var projected = doc.project(projection);
+      projected.forEach((element)=>{
+        callback(element);
+      });
+    });
+  }
+
+  /**
+   *  Delete a specific element from collection
+   */
+  deleteDocsFromCollectionProjection(col, where, projection, callback) {
+
+    var data = this.client.db(dbName).collection(col).updateOne(where, projection, (err, doc) => {
+      if (err) throw err;
+      console.log(doc);
+      callback(doc);
     });
   }
 
@@ -83,7 +108,26 @@ class MongoConnector {
       this.client.db(dbName).collection(col).updateOne(myQuery, update_cond,
        (err, result) => {
          if (err) throw err;
-         callback("Updated");
+         callback({
+          "status": "UPDATED",
+          "query": myQuery,
+          "condition": update_cond
+         });
+       });
+    }
+
+    /**
+     *  Adds a value to the selected element
+     */
+    aggregateDoc(col, myQuery, addQuery, callback) {
+      this.client.db(dbName).collection(col).aggregate(myQuery, update_cond,
+       (err, result) => {
+         if (err) throw err;
+         callback({
+          "status": "AGGREGATED",
+          "query": myQuery,
+          "condition": update_cond
+         });
        });
     }
 

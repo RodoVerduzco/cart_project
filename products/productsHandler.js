@@ -23,7 +23,6 @@ router.post('/insertProduct', (req, res, next) => {
 
   // To know which call was made
   console.log("# POST: Insert Products");
-
   var connector = new MongoConnector((err) => {
     ProductModel.insertProduct(connector, req.body, (err, mongoRes) => {
         console.log(mongoRes.result);
@@ -170,9 +169,9 @@ router.post('/updateInverntory', (req, res, next) => {
   console.log("# POST: Update Inventory Product");
 
   var name = req.body.name;
-  var add_qty = parseInt(req.body.add_qty);
+  var qty = parseInt(req.body.qty);
 
-  if(name && add_qty) {
+  if(name && qty) {
     // find the product
     var connector = new MongoConnector((err) => {
         ProductModel.getProduct(connector, name, (docs) => {
@@ -187,20 +186,30 @@ router.post('/updateInverntory', (req, res, next) => {
               // Update the Product
               var connectorUpdate = new MongoConnector((err) => {
                 var old_qty = parseInt(docs.qty);
+                var new_qty = old_qty + qty;
 
-                // Update the database
-                ProductModel.editProduct(connectorUpdate, name, {"qty": old_qty + add_qty}, (result) => {
-                  connectorUpdate.close();
+                if(new_qty<0) {
+                  res.setHeader('Content-Type', 'application/json');
+                  res.status(422).send(JSON.stringify({response: {
+                                                        "status": "failed",
+                                                        "information": "Negative number not allowed"
+                                                      }}));
+                }
+                else {
+                  // Update the database
+                  ProductModel.editProduct(connectorUpdate, name, {"qty": new_qty}, (result) => {
+                    connectorUpdate.close();
 
-                  if(result === "NOT_FOUND") {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.status(418).send(JSON.stringify({response: "Incorrect Product or Password"}));
-                  }
-                  else {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.status(200).send(JSON.stringify({response: result}));
-                  }
-                });
+                    if(result === "NOT_FOUND") {
+                      res.setHeader('Content-Type', 'application/json');
+                      res.status(418).send(JSON.stringify({response: "Incorrect Product or Password"}));
+                    }
+                    else {
+                      res.setHeader('Content-Type', 'application/json');
+                      res.status(200).send(JSON.stringify({response: result}));
+                    }
+                  });
+                }
               });
             }
         });
