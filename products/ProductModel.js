@@ -80,6 +80,13 @@ class ProductModel {
     connector.getAllDocs(COLLECTION, callback);
   }
 
+  static changeProductStatus(connector, product_name, callback) {
+    var myQuery = {"name": product_name};
+    var update_cond = {$bit: {status: {xor: 1}}};  //Xor to change true or false
+
+    connector.updateDoc(COLLECTION, myQuery, update_cond, callback);
+  }
+
   static editProduct(connector, product_name, new_data, callback) {
     var myQuery = { "name": product_name };
     var update_cond = { $set: new_data };

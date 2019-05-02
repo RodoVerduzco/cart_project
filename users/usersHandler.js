@@ -164,7 +164,8 @@ router.post('/login', (req, res, next) => {
             res.status(200).send(JSON.stringify({response: {
                                                     "status": "correct",
                                                     "type": result.type,
-                                                    "email": email}}));
+                                                    "email": email,
+                                                    "username": result.username}}));
             console.log("  > CORRECT");
           }
       });
@@ -230,7 +231,8 @@ router.post('/addCart', (req, res, next) => {
                         "price": docs.price,
                         "product": product,
                         "qty": 1,
-                        "email": email
+                        "email": email,
+                        "description": docs.description
                       };
 
                       var connector = new MongoConnector((err) => {

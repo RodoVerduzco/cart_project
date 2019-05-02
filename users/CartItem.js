@@ -14,6 +14,7 @@ class CartItem {
     this.product_name = data.product;
     this.qty = data.qty;
     this.email = data.email;
+    this.description = data.description;
   }
 
   /**
@@ -32,7 +33,8 @@ class CartItem {
         "cart": {
           "product_name": cartItem.product,
           "qty": cartItem.qty,
-          "price": cartItem.price
+          "price": cartItem.price,
+          "description": cartItem.description
         }
       }
     };

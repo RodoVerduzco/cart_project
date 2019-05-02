@@ -110,49 +110,23 @@ router.put('/editProduct', (req, res, next) => {
   }
 });
 
-// DEACTIVATE USER
-router.put('/deactivateProduct', (req, res, next) => {
+// ACTIVATES OR DEACTIVATES PRODUCT STATUS
+router.put('/changeProductStatus', (req, res, next) => {
   // To know which call was made
-  console.log("# PUT: Deactivate Product");
-  console.log(req.body);
-  var name = req.body.name;
+  console.log("# PUT: Change Product Status");
+
+  var product_name = req.body.name;
 
   // If values needed are received
-  if(name) {
+  if(product_name) {
     var connector = new MongoConnector((err) => {
 
-      ProductModel.editProduct(connector, name, {"status": "inactive"}, (result) => {
+      ProductModel.changeProductStatus(connector, product_name, (result) => {
           console.log(result);
           connector.close();
 
           res.setHeader('Content-Type', 'application/json');
-          res.status(200).send(JSON.stringify({response: "Product Deactivated"}));
-      });
-    });
-  }
-  else {
-    res.setHeader('Content-Type', 'application/json');
-    res.status(422).send(JSON.stringify({response: "Missing the name Parameter"}));
-  }
-});
-
-// ACTIVATE
-router.put('/activateProduct', (req, res, next) => {
-  // To know which call was made
-  console.log("# PUT: Activate Product");
-
-  var name = req.body.name;
-
-  // If values needed are received
-  if(name) {
-    var connector = new MongoConnector((err) => {
-
-      ProductModel.editProduct(connector, name, {"status": "active"}, (result) => {
-          console.log(result);
-          connector.close();
-
-          res.setHeader('Content-Type', 'application/json');
-          res.status(200).send(JSON.stringify({response: "Product Activated"}));
+          res.status(200).send(JSON.stringify({response: "Product Status Changed"}));
       });
     });
   }
